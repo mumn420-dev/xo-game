@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe (Human & Bot)</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --text-color: #f8fafc;
+            --x-color: #f43f5e;
+            --o-color: #38bdf8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            max-width: 350px;
+            width: 100%;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            color: var(--text-color);
+        }
+
+        .settings {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        select, button {
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select {
+            background-color: #334155;
+            color: var(--text-color);
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: #0f172a;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        #status {
+            margin: 15px 0;
+            font-size: 1.1rem;
+            font-weight: 500;
+            height: 30px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            background-color: #334155;
+            height: 90px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .cell:hover {
+            background-color: #475569;
+        }
+
+        .cell.X {
+            color: var(--x-color);
+        }
+
+        .cell.O {
+            color: var(--o-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Tic-Tac-Toe</h1>
+        
+        <div class="settings">
+            <label for="gameMode">Select Mode:</label>
+            <select id="gameMode">
+                <option value="pvp">Human vs Human</option>
+                <option value="pve">Human vs Bot</option>
+                <option value="eve">Bot vs Bot</option>
+            </select>
+            <button class="btn-primary" onclick="startGame()">Start / Reset Game</button>
+        </div>
+
+        <div id="status">Choose a mode and click Start</div>
+
+        <div class="board" id="board">
+            <div class="cell" onclick="cellClicked(0)"></div>
+            <div class="cell" onclick="cellClicked(1)"></div>
+            <div class="cell" onclick="cellClicked(2)"></div>
+            <div class="cell" onclick="cellClicked(3)"></div>
+            <div class="cell" onclick="cellClicked(4)"></div>
+            <div class="cell" onclick="cellClicked(5)"></div>
+            <div class="cell" onclick="cellClicked(6)"></div>
+            <div class="cell" onclick="cellClicked(7)"></div>
+            <div class="cell" onclick="cellClicked(8)"></div>
+        </div>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        const modeSelect = document.getElementById('gameMode');
+
+        let board = ["", "", "", "", "", "", "", "", ""];
+        let currentPlayer = "X";
+        let isRunning = false;
+        let gameMode = "pvp";
+        let botInterval = null;
+
+        const winConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        function startGame() {
+            clearInterval(botInterval);
+            board = ["", "", "", "", "", "", "", "", ""];
+            currentPlayer = "X";
+            isRunning = true;
+            gameMode = modeSelect.value;
+            
+            updateBoardUI();
+            statusElement.textContent = `Player ${currentPlayer}'s turn`;
+
+            if (gameMode === "eve") {
+                botInterval = setInterval(runBotTurn, 600);
+            }
+        }
+
+        function cellClicked(index) {
+            if (!isRunning || board[index] !== "") return;
+            
+            if (gameMode === "pve" && currentPlayer === "O") return; // block human input during bot turn
+            if (gameMode === "eve") return; // no human clicks in bot vs bot
+
+            makeMove(index, currentPlayer);
+        }
+
+        function makeMove(index, player) {
+            board[index] = player;
+            updateBoardUI();
+            
+            if (checkWinner(player)) {
+                statusElement.textContent = gameMode === "eve" ? `Bot (${player}) Wins!` : (gameMode === "pve" && player === "O" ? "Bot Wins!" : `Player ${player} Wins!`);
+                isRunning = false;
+                clearInterval(botInterval);
+                return;
+            }
+
+            if (board.every(cell => cell !== "")) {
+                statusElement.textContent = "It's a Draw!";
+                isRunning = false;
+                clearInterval(botInterval);
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusElement.textContent = gameMode === "pve" && currentPlayer === "O" ? "Bot is thinking..." : `Player ${currentPlayer}'s turn`;
+
+            if (gameMode === "pve" && currentPlayer === "O" && isRunning) {
+                setTimeout(runBotTurn, 500);
+            }
+        }
+
+        function runBotTurn() {
+            if (!isRunning) return;
+            const move = getSmartBotMove(currentPlayer);
+            if (move !== -1) {
+                makeMove(move, currentPlayer);
+            }
+        }
+
+        function getSmartBotMove(botMark) {
+            const humanMark = botMark === "X" ? "O" : "X";
+
+            // 1. Win if possible
+            for (let condition of winConditions) {
+                let [a, b, c] = condition;
+                if (board[a] === botMark && board[b] === botMark && board[c] === "") return c;
+                if (board[a] === botMark && board[c] === botMark && board[b] === "") return b;
+                if (board[b] === botMark && board[c] === botMark && board[a] === "") return a;
+            }
+
+            // 2. Block human win
+            for (let condition of winConditions) {
+                let [a, b, c] = condition;
+                if (board[a] === humanMark && board[b] === humanMark && board[c] === "") return c;
+                if (board[a] === humanMark && board[c] === humanMark && board[b] === "") return b;
+                if (board[b] === humanMark && board[c] === humanMark && board[a] === "") return a;
+            }
+
+            // 3. Take center
+            if (board[4] === "") return 4;
+
+            // 4. Take random available spot
+            const available = board.map((val, idx) => val === "" ? idx : null).filter(val => val !== null);
+            if (available.length > 0) {
+                return available[Math.floor(Math.random() * available.length)];
+            }
+            return -1;
+        }
+
+        function checkWinner(player) {
+            return winConditions.some(condition => {
+                return condition.every(index => board[index] === player);
+            });
+        }
+
+        function updateBoardUI() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach((cell, index) => {
+                cell.textContent = board[index];
+                cell.className = `cell ${board[index]}`;
+            });
+        }
+    </script>
+</body>
+</html>
