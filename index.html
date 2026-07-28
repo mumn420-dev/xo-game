@@ -36,7 +36,7 @@
             text-align: center;
             max-width: 350px;
             width: 100%;
-            z-index: 10; /* Keeps the game on top of background */
+            z-index: 10;
         }
 
         h1 {
@@ -105,7 +105,7 @@
             user-select: none;
         }
 
-        .cell:hover:not(.disabled) {
+        .cell:hover {
             background-color: #475569;
         }
 
@@ -117,45 +117,37 @@
             color: var(--o-color);
         }
 
-        /* Winner's Screen Styles */
         #winner-display {
-            display: none; /* Hidden by default */
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(15, 23, 42, 0.9); /* Semi-transparent overlay */
+            background-color: rgba(15, 23, 42, 0.95);
             z-index: 100;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             text-align: center;
-            animation: fadeIn 0.5s ease-in;
         }
 
         #winner-display h2 {
             font-size: 2.5rem;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             color: var(--accent);
-            text-shadow: 0 2px 10px rgba(56, 188, 248, 0.5);
         }
 
         #congrats-image {
-            width: 400px; /* Adjust size as needed */
+            width: 320px;
+            max-width: 80vw;
             height: auto;
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
-            border: 5px solid var(--accent);
+            border: 4px solid var(--accent);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Balloon/Confetti Animation Styles */
         .sprite-container {
             position: fixed;
             top: 0;
@@ -172,7 +164,6 @@
             top: -50px;
             font-size: 2rem;
             animation: fall linear infinite;
-            opacity: 0.7;
         }
 
         @keyframes fall {
@@ -180,12 +171,10 @@
                 transform: translateY(105vh) rotate(360deg);
             }
         }
-
     </style>
 </head>
 <body>
 
-    <!-- Game Container -->
     <div class="container" id="game-container">
         <h1>Tic-Tac-Toe</h1>
         
@@ -214,22 +203,20 @@
         </div>
     </div>
 
-    <!-- Winner Display Screen (Initially Hidden) -->
     <div id="winner-display">
         <h2>Congratulations!</h2>
-        <img id="congrats-image" src="image_0.png" alt="Winner's Certificate">
+        <img id="congrats-image" src="IMG-20260728-WA0006.jpg" alt="Winner Certificate">
         <button class="btn-primary" onclick="resetToGame()">Play Again</button>
     </div>
 
-    <!-- Sprites Container (For balloons and confetti) -->
     <div class="sprite-container" id="sprite-container"></div>
 
     <script>
-        const boardElement = document.getElementById('board');
         const statusElement = document.getElementById('status');
         const modeSelect = document.getElementById('gameMode');
         const winnerDisplay = document.getElementById('winner-display');
         const spriteContainer = document.getElementById('sprite-container');
+        const gameContainer = document.getElementById('game-container');
 
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
@@ -246,7 +233,7 @@
 
         function startGame() {
             clearInterval(botInterval);
-            resetToGame(); // Ensure we are in the game view, not winner view
+            resetToGame();
             board = ["", "", "", "", "", "", "", "", ""];
             currentPlayer = "X";
             isRunning = true;
@@ -254,18 +241,16 @@
             
             updateBoardUI();
             statusElement.textContent = `Player ${currentPlayer}'s turn`;
-            statusElement.style.color = "var(--text-color)";
 
             if (gameMode === "eve") {
-                botInterval = setInterval(runBotTurn, 600);
+                botInterval = setInterval(runBotTurn, 700);
             }
         }
 
         function cellClicked(index) {
             if (!isRunning || board[index] !== "") return;
-            
-            if (gameMode === "pve" && currentPlayer === "O") return; // block human input during bot turn
-            if (gameMode === "eve") return; // no human clicks in bot vs bot
+            if (gameMode === "pve" && currentPlayer === "O") return;
+            if (gameMode === "eve") return;
 
             makeMove(index, currentPlayer);
         }
@@ -281,15 +266,13 @@
 
             if (board.every(cell => cell !== "")) {
                 statusElement.textContent = "It's a Draw!";
-                statusElement.style.color = "var(--text-color)";
                 isRunning = false;
                 clearInterval(botInterval);
                 return;
             }
 
             currentPlayer = currentPlayer === "X" ? "O" : "X";
-            statusElement.textContent = gameMode === "pve" && currentPlayer === "O" ? "Bot is thinking..." : `Player ${currentPlayer}'s turn`;
-            statusElement.style.color = currentPlayer === "X" ? "var(--x-color)" : (gameMode === "pve" ? "var(--text-color)" : "var(--o-color)");
+            statusElement.textContent = (gameMode === "pve" && currentPlayer === "O") ? "Bot is thinking..." : `Player ${currentPlayer}'s turn`;
 
             if (gameMode === "pve" && currentPlayer === "O" && isRunning) {
                 setTimeout(runBotTurn, 500);
@@ -344,7 +327,7 @@
             const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
                 cell.textContent = board[index];
-                cell.className = `cell ${board[index]} ${board[index] !== "" ? "disabled" : ""}`;
+                cell.className = `cell ${board[index]}`;
             });
         }
 
@@ -352,97 +335,61 @@
             isRunning = false;
             clearInterval(botInterval);
 
-            let winnerText = "";
             let isHumanWinner = false;
-
-            if (gameMode === "eve") {
-                winnerText = `Bot (${player}) Wins!`;
+            if (gameMode === "pvp") {
+                statusElement.textContent = `Player ${player} Wins!`;
+                isHumanWinner = true;
             } else if (gameMode === "pve") {
-                if (player === "O") {
-                    winnerText = "Bot Wins!";
-                } else {
-                    winnerText = "You Win!";
+                if (player === "X") {
+                    statusElement.textContent = "You Win!";
                     isHumanWinner = true;
+                } else {
+                    statusElement.textContent = "Bot Wins!";
                 }
             } else {
-                winnerText = `Player ${player} Wins!`;
-                isHumanWinner = true;
+                statusElement.textContent = `Bot (${player}) Wins!`;
             }
 
-            statusElement.textContent = winnerText;
-            statusElement.style.color = "var(--accent)";
-
-            // Trigger celebration if a human won
             if (isHumanWinner) {
-                setTimeout(showWinnerDisplay, 800); // Small delay before showing win screen
+                setTimeout(showWinnerDisplay, 700);
             }
         }
 
         function showWinnerDisplay() {
             isCelebrationActive = true;
-            const gameContainer = document.getElementById('game-container');
-            gameContainer.style.display = 'none'; // Hide the game board
-
-            winnerDisplay.style.display = 'flex'; // Show the winner's screen
+            gameContainer.style.display = 'none';
+            winnerDisplay.style.display = 'flex';
             startSprites();
         }
 
         function resetToGame() {
             isCelebrationActive = false;
             stopSprites();
-            winnerDisplay.style.display = 'none'; // Hide the winner's screen
-            const gameContainer = document.getElementById('game-container');
-            gameContainer.style.display = 'block'; // Show the game board
-            statusElement.textContent = "Game Reset. Choose a mode to start.";
-            statusElement.style.color = "var(--text-color)";
-        }
-
-        // --- Balloon & Confetti Logic ---
-
-        const spriteSymbols = ['🎈', '🎉', '🎊', '✨', '⭐️'];
-        let spriteInterval;
-
-        function createOrResetSprite(spriteElement) {
-            const symbol = spriteSymbols[Math.floor(Math.random() * spriteSymbols.length)];
-            spriteElement.textContent = symbol;
-            spriteElement.className = 'sprite';
-            
-            // Random horizontal position (0% to 100%)
-            spriteElement.style.left = Math.random() * 100 + '%';
-            
-            // Random animation duration (3s to 7s)
-            const duration = Math.random() * 4 + 3;
-            spriteElement.style.animationDuration = duration + 's';
-            
-            // Random font size (1rem to 3rem)
-            const size = Math.random() * 2 + 1;
-            spriteElement.style.fontSize = size + 'rem';
-            
-            // Random opacity
-            spriteElement.style.opacity = Math.random() * 0.5 + 0.2;
+            winnerDisplay.style.display = 'none';
+            gameContainer.style.display = 'block';
+            statusElement.textContent = "Choose a mode and click Start";
         }
 
         function startSprites() {
-            spriteContainer.innerHTML = ''; // Clear existing sprites
-
-            // Create initial batch of sprites
-            for (let i = 0; i < 40; i++) {
+            spriteContainer.innerHTML = '';
+            const symbols = ['🎈', '🎉', '🎊', '✨', '⭐'];
+            
+            for (let i = 0; i < 35; i++) {
                 const sprite = document.createElement('div');
-                createOrResetSprite(sprite);
+                sprite.className = 'sprite';
+                sprite.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+                sprite.style.left = Math.random() * 100 + '%';
+                sprite.style.animationDuration = (Math.random() * 3 + 3) + 's';
+                sprite.style.animationDelay = (Math.random() * 3) + 's';
+                sprite.style.fontSize = (Math.random() * 1.5 + 1.5) + 'rem';
+                
                 spriteContainer.appendChild(sprite);
-                
-                // Add a listener to reset the sprite when the animation ends
-                sprite.addEventListener('animationiteration', () => {
-                    if (!isCelebrationActive) return; // Don't reset if celebration is over
-                    // Reset properties for the next fall
-                    sprite.style.top = '-50px'; 
-                    createOrResetSprite(sprite); 
-                });
-                
-                // Initial staggered start to avoid clumped falling
-                sprite.style.animationDelay = Math.random() * 5 + 's';
             }
         }
 
         function stopSprites() {
             spriteContainer.innerHTML = '';
+        }
+    </script>
+</body>
+</html>
