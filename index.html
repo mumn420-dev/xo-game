@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tic-Tac-Toe (Human & Bot)</title>
+    <title>لعبة إكس أو (لاعب ضد لاعب وبوت)</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -176,37 +176,37 @@
 <body>
 
     <div class="container" id="game-container">
-        <h1>Tic-Tac-Toe</h1>
+        <h1>لعبة إكس أو</h1>
         
         <div class="settings">
-            <label for="gameMode">Select Mode:</label>
+            <label for="gameMode">اختر وضع اللعب:</label>
             <select id="gameMode">
-                <option value="pvp">Human vs Human</option>
-                <option value="pve">Human vs Bot</option>
-                <option value="eve">Bot vs Bot</option>
+                <option value="pvp">لاعب ضد لاعب</option>
+                <option value="pve">لاعب ضد الكمبيوتر</option>
+                <option value="eve">كمبيوتر ضد كمبيوتر</option>
             </select>
-            <button class="btn-primary" onclick="startGame()">Start / Reset Game</button>
+            <button class="btn-primary" type="button" id="start-btn">بدء / إعادة تشغيل</button>
         </div>
 
-        <div id="status">Choose a mode and click Start</div>
+        <div id="status">اختر وضع اللعب واضغط بدء</div>
 
         <div class="board" id="board">
-            <div class="cell" onclick="cellClicked(0)"></div>
-            <div class="cell" onclick="cellClicked(1)"></div>
-            <div class="cell" onclick="cellClicked(2)"></div>
-            <div class="cell" onclick="cellClicked(3)"></div>
-            <div class="cell" onclick="cellClicked(4)"></div>
-            <div class="cell" onclick="cellClicked(5)"></div>
-            <div class="cell" onclick="cellClicked(6)"></div>
-            <div class="cell" onclick="cellClicked(7)"></div>
-            <div class="cell" onclick="cellClicked(8)"></div>
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
         </div>
     </div>
 
     <div id="winner-display">
-        <h2>Congratulations!</h2>
-        <img id="congrats-image" src="IMG-20260728-WA0006.jpg" alt="Winner Certificate">
-        <button class="btn-primary" onclick="resetToGame()">Play Again</button>
+        <h2>مبروك الفوز!</h2>
+        <img id="congrats-image" src="IMG-20260728-WA0006.jpg" alt="صورة الفائز">
+        <button class="btn-primary" type="button" id="restart-btn">العب مرة أخرى</button>
     </div>
 
     <div class="sprite-container" id="sprite-container"></div>
@@ -217,6 +217,9 @@
         const winnerDisplay = document.getElementById('winner-display');
         const spriteContainer = document.getElementById('sprite-container');
         const gameContainer = document.getElementById('game-container');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const cells = document.querySelectorAll('.cell');
 
         let board = ["", "", "", "", "", "", "", "", ""];
         let currentPlayer = "X";
@@ -231,6 +234,17 @@
             [0, 4, 8], [2, 4, 6]
         ];
 
+        // Event Listeners for buttons and cells to guarantee execution
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', resetToGame);
+
+        cells.forEach(cell => {
+            cell.addEventListener('click', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                cellClicked(index);
+            });
+        });
+
         function startGame() {
             clearInterval(botInterval);
             resetToGame();
@@ -240,7 +254,7 @@
             gameMode = modeSelect.value;
             
             updateBoardUI();
-            statusElement.textContent = `Player ${currentPlayer}'s turn`;
+            statusElement.textContent = `دور اللاعب ${currentPlayer}`;
 
             if (gameMode === "eve") {
                 botInterval = setInterval(runBotTurn, 700);
@@ -265,14 +279,14 @@
             }
 
             if (board.every(cell => cell !== "")) {
-                statusElement.textContent = "It's a Draw!";
+                statusElement.textContent = "تعادل!";
                 isRunning = false;
                 clearInterval(botInterval);
                 return;
             }
 
             currentPlayer = currentPlayer === "X" ? "O" : "X";
-            statusElement.textContent = (gameMode === "pve" && currentPlayer === "O") ? "Bot is thinking..." : `Player ${currentPlayer}'s turn`;
+            statusElement.textContent = (gameMode === "pve" && currentPlayer === "O") ? "الكمبيوتر يفكر..." : `دور اللاعب ${currentPlayer}`;
 
             if (gameMode === "pve" && currentPlayer === "O" && isRunning) {
                 setTimeout(runBotTurn, 500);
@@ -324,7 +338,6 @@
         }
 
         function updateBoardUI() {
-            const cells = document.querySelectorAll('.cell');
             cells.forEach((cell, index) => {
                 cell.textContent = board[index];
                 cell.className = `cell ${board[index]}`;
@@ -337,17 +350,17 @@
 
             let isHumanWinner = false;
             if (gameMode === "pvp") {
-                statusElement.textContent = `Player ${player} Wins!`;
+                statusElement.textContent = `فاز اللاعب ${player}!`;
                 isHumanWinner = true;
             } else if (gameMode === "pve") {
                 if (player === "X") {
-                    statusElement.textContent = "You Win!";
+                    statusElement.textContent = "لقد فزت!";
                     isHumanWinner = true;
                 } else {
-                    statusElement.textContent = "Bot Wins!";
+                    statusElement.textContent = "فاز الكمبيوتر!";
                 }
             } else {
-                statusElement.textContent = `Bot (${player}) Wins!`;
+                statusElement.textContent = `فاز الكمبيوتر (${player})!`;
             }
 
             if (isHumanWinner) {
@@ -367,7 +380,7 @@
             stopSprites();
             winnerDisplay.style.display = 'none';
             gameContainer.style.display = 'block';
-            statusElement.textContent = "Choose a mode and click Start";
+            statusElement.textContent = "اختر وضع اللعب واضغط بدء";
         }
 
         function startSprites() {
